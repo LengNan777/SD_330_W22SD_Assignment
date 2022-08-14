@@ -20,10 +20,35 @@ namespace SD_330_W22SD_Assignment.Controllers
         }
 
         // GET: Questions
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string sortOrder,int? pageNumber)
         {
-              return _context.Question != null ? 
-                          View(await _context.Question.ToListAsync()) :
+            ViewData["CurrentSort"] = sortOrder;
+            ViewData["DateSort"] = String.IsNullOrEmpty(sortOrder) ? "Date" : "";
+            ViewData["AnswerNumSort"] = sortOrder == "AnswerNum" ? "AnswerNumDesc" : "AnswerNum";
+            var questions = from q in _context.Question
+                            select q;
+            switch (sortOrder)
+            {
+                case "Date":
+                    //questions = null;
+                    questions = questions.OrderByDescending(q => q.CreatedDate);
+                    break;
+                case "AnswerNumDesc":
+                    //questions = null;
+                    questions = questions.OrderBy(q => q.AnswerNum);
+                    break;
+                case "AnswerNum":
+                    //questions = null;
+                    questions = questions.OrderByDescending(q => q.AnswerNum);
+                    break;
+                default:
+                    questions = questions.OrderBy(q => q.CreatedDate);
+                    break;
+            }
+            int pageSize = 2;
+            //return View(await PaginatedList<Question>.CreateAsync(Question.AsNoTracking(), pageNumber ?? 1, pageSize));
+            return _context.Question != null ? 
+                          View(await PaginatedList<Question>.CreateAsync(questions.Include(q => q.user), pageNumber ?? 1, pageSize)) :
                           Problem("Entity set 'ApplicationDbContext.Question'  is null.");
         }
 
