@@ -16,12 +16,16 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.R
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+//I tried to initialize data by creating a local scope and called initialize method of SeedData. But there is always a bug in line 25. After searching a lot, my exhausted head still figure it out.
+//I do not know whether it would help, I would upload the sql file with the github link.
+
 //using (var scope = app.Services.CreateScope())
 //{
 //    var services = scope.ServiceProvider;
 //    await SeedData.Initialize(services);
 //}
-// Configure the HTTP request pipeline.
+
 
 if (app.Environment.IsDevelopment())
 {
