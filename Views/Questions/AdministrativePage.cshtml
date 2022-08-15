@@ -1,0 +1,57 @@
+﻿@model IEnumerable<SD_330_W22SD_Assignment.Models.Question>
+
+@{
+    ViewData["Title"] = "AdministrativePage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Administrative Page</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.user)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AnswerNum)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CreatedDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.QuestionDetail)
+            </th>
+            <th>
+                Operation
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.user.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AnswerNum)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreatedDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.QuestionDetail)
+            </td>
+            <td>
+                <a asp-action="Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

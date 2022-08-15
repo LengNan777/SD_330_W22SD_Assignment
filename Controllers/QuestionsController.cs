@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -47,15 +48,12 @@ namespace SD_330_W22SD_Assignment.Controllers
             switch (sortOrder)
             {
                 case "Date":
-                    //questions = null;
                     questions = questions.OrderByDescending(q => q.CreatedDate);
                     break;
                 case "AnswerNumDesc":
-                    //questions = null;
                     questions = questions.OrderBy(q => q.AnswerNum);
                     break;
                 case "AnswerNum":
-                    //questions = null;
                     questions = questions.OrderByDescending(q => q.AnswerNum);
                     break;
                 default:
@@ -63,7 +61,6 @@ namespace SD_330_W22SD_Assignment.Controllers
                     break;
             }
             int pageSize = 2;
-            //return View(await PaginatedList<Question>.CreateAsync(Question.AsNoTracking(), pageNumber ?? 1, pageSize));
             return _context.Question != null ? 
                           View(await PaginatedList<Question>.CreateAsync(questions.Include(q => q.user), pageNumber ?? 1, pageSize)) :
                           Problem("Entity set 'ApplicationDbContext.Question'  is null.");
@@ -92,6 +89,7 @@ namespace SD_330_W22SD_Assignment.Controllers
         }
 
         // GET: Questions/Create
+        [Authorize]
         public IActionResult Create()
         {
             return View();
@@ -100,6 +98,7 @@ namespace SD_330_W22SD_Assignment.Controllers
         // POST: Questions/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Title","QuestionDeatail")] Question question)
@@ -175,7 +174,7 @@ namespace SD_330_W22SD_Assignment.Controllers
                 return NotFound();
             }
 
-            var question = await _context.Question
+            var question = await _context.Question.Include(q=>q.user)
                 .FirstOrDefaultAsync(m => m.ID == id);
             if (question == null)
             {
@@ -190,25 +189,33 @@ namespace SD_330_W22SD_Assignment.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            if (_context.Question == null)
+            try
             {
-                return Problem("Entity set 'ApplicationDbContext.Question'  is null.");
-            }
-            var question = await _context.Question.FindAsync(id);
-            if (question != null)
+                if (_context.Question == null)
+                {
+                    return Problem("Entity set 'ApplicationDbContext.Question'  is null.");
+                }
+                var question = await _context.Question.FindAsync(id);
+                if (question != null)
+                {
+                    _context.Question.Remove(question);
+                }
+
+                await _context.SaveChangesAsync();
+                return RedirectToAction("AdministrativePage");
+            }catch(Exception ex)
             {
-                _context.Question.Remove(question);
+                return RedirectToAction("AdministrativePage");
             }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
         }
 
+        [Authorize]
         public IActionResult Answer()
         {
             return View();
         }
 
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Answer(string answer)
@@ -237,6 +244,7 @@ namespace SD_330_W22SD_Assignment.Controllers
             return View(questions);
         }
 
+        [Authorize]
         public IActionResult UpVote(int QuestionId,int AnswerId)
         {
             try
@@ -256,6 +264,7 @@ namespace SD_330_W22SD_Assignment.Controllers
             return RedirectToAction("Index");
         }
 
+        [Authorize]
         public IActionResult DownVote(int QuestionId, int AnswerId)
         {
             try
@@ -275,6 +284,8 @@ namespace SD_330_W22SD_Assignment.Controllers
             }
             return RedirectToAction("Index");
         }
+
+        [Authorize]
         public IActionResult SetCorrectAnswer(int AnswerId,int QuestionId)
         {
             try
@@ -290,6 +301,12 @@ namespace SD_330_W22SD_Assignment.Controllers
                 return RedirectToAction("Index");
             }
             return RedirectToAction("Index");
+        }
+
+        [Authorize]
+        public async Task<IActionResult> AdministrativePage()
+        {
+            return View(await _context.Question.Include(q=>q.user).OrderByDescending(q => q.CreatedDate).ToListAsync());
         }
 
         private bool QuestionExists(int id)
